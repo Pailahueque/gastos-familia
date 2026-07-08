@@ -1,318 +1,244 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Expense Splitter</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splitwise Familiar</title>
+    <style>
+        :root {
+            --primary: #1cc88a;
+            --primary-dark: #17a673;
+            --background: #f8f9fc;
+            --text: #5a5c69;
+            --card-bg: #ffffff;
+        }
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-body{
-background:#f4f6f8;
-padding:30px;
-}
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
 
-.container{
-max-width:1100px;
-margin:auto;
-}
+        h1, h2 {
+            text-align: center;
+            color: #3a3b45;
+        }
 
-h1{
-margin-bottom:20px;
-color:#222;
-}
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
 
-.card{
-background:white;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-box-shadow:0 5px 15px rgba(0,0,0,.08);
-}
+        .form-group {
+            margin-bottom: 15px;
+        }
 
-input,select,button{
-padding:10px;
-margin:5px;
-border-radius:8px;
-border:1px solid #ccc;
-}
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
 
-button{
-background:#22c55e;
-color:white;
-border:none;
-cursor:pointer;
-}
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d3e2;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
 
-button:hover{
-background:#16a34a;
-}
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-ul{
-list-style:none;
-margin-top:10px;
-}
+        button:hover {
+            background-color: var(--primary-dark);
+        }
 
-li{
-padding:8px;
-border-bottom:1px solid #eee;
-}
+        .balance-list, .expense-list {
+            list-style: none;
+            padding: 0;
+        }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px;
-}
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #e3e6f0;
+            font-size: 18px;
+        }
 
-td,th{
-padding:10px;
-border-bottom:1px solid #ddd;
-text-align:left;
-}
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            background: #f1f3f9;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
 
-.balance-positive{
-color:green;
-font-weight:bold;
-}
-
-.balance-negative{
-color:red;
-font-weight:bold;
-}
-</style>
+        .debtor { color: #e74a3b; font-weight: bold; }
+        .creditor { color: #1cc88a; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
+    <h1>🏡 Splitwise Familiar</h1>
 
-<h1>💰 Expense Splitter</h1>
+    <div class="card">
+        <h2>Saldos Globales</h2>
+        <ul id="balanceList" class="balance-list">
+            </ul>
+    </div>
 
-<div class="card">
+    <div class="card">
+        <h2>Agregar Gasto</h2>
+        <form id="expenseForm">
+            <div class="form-group">
+                <label for="payer">¿Quién pagó?</label>
+                <select id="payer" required>
+                    <option value="Mamá">Mamá</option>
+                    <option value="Papá">Papá</option>
+                    <option value="Hijo/a 1">Hijo/a 1</option>
+                    <option value="Hijo/a 2">Hijo/a 2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount">Monto ($)</label>
+                <input type="number" id="amount" min="1" step="any" placeholder="Ej: 5000" required>
+            </div>
+            <div class="form-group">
+                <label for="concept">Concepto</label>
+                <input type="text" id="concept" placeholder="Ej: Supermercado" required>
+            </div>
+            <button type="submit">Repartir en partes iguales</button>
+        </form>
+    </div>
 
-<h2>Participantes</h2>
-
-<input id="personName" placeholder="Nombre">
-
-<button onclick="addPerson()">Agregar</button>
-
-<ul id="peopleList"></ul>
-
-</div>
-
-<div class="card">
-
-<h2>Nuevo gasto</h2>
-
-<input id="description" placeholder="Descripción">
-
-<input id="amount" type="number" placeholder="Monto">
-
-<select id="payer"></select>
-
-<button onclick="addExpense()">Guardar gasto</button>
-
-</div>
-
-<div class="card">
-
-<h2>Gastos</h2>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Descripción</th>
-
-<th>Monto</th>
-
-<th>Pagó</th>
-
-</tr>
-
-</thead>
-
-<tbody id="expensesTable"></tbody>
-
-</table>
-
-</div>
-
-<div class="card">
-
-<h2>Balances</h2>
-
-<ul id="balances"></ul>
-
-</div>
-
+    <div class="card">
+        <h2>Historial de Gastos</h2>
+        <ul id="expenseList" class="expense-list">
+            </ul>
+        <button id="clearBtn" style="background-color: #e74a3b; margin-top: 10px;">Reiniciar Cuentas</button>
+    </div>
 </div>
 
 <script>
-
-let people=JSON.parse(localStorage.getItem("people"))||[];
-
-let expenses=JSON.parse(localStorage.getItem("expenses"))||[];
-
-function save(){
-
-localStorage.setItem("people",JSON.stringify(people));
-
-localStorage.setItem("expenses",JSON.stringify(expenses));
-
-}
-
-function renderPeople(){
-
-let list=document.getElementById("peopleList");
-
-let payer=document.getElementById("payer");
-
-list.innerHTML="";
-
-payer.innerHTML="";
-
-people.forEach((p,i)=>{
-
-list.innerHTML+=`<li>${p}</li>`;
-
-payer.innerHTML+=`<option value="${i}">${p}</option>`;
-
-});
-
-}
-
-function addPerson(){
-
-let name=document.getElementById("personName").value.trim();
-
-if(!name)return;
-
-people.push(name);
-
-document.getElementById("personName").value="";
-
-save();
-
-renderPeople();
-
-calculate();
-
-}
-
-function addExpense(){
-
-let desc=document.getElementById("description").value;
-
-let amount=parseFloat(document.getElementById("amount").value);
-
-let payer=document.getElementById("payer").value;
-
-if(!desc||!amount)return;
-
-expenses.push({
-
-desc,
-
-amount,
-
-payer:Number(payer)
-
-});
-
-document.getElementById("description").value="";
-
-document.getElementById("amount").value="";
-
-save();
-
-renderExpenses();
-
-calculate();
-
-}
-
-function renderExpenses(){
-
-let table=document.getElementById("expensesTable");
-
-table.innerHTML="";
-
-expenses.forEach(e=>{
-
-table.innerHTML+=`
-
-<tr>
-
-<td>${e.desc}</td>
-
-<td>$${e.amount.toFixed(2)}</td>
-
-<td>${people[e.payer]}</td>
-
-</tr>
-
-`;
-
-});
-
-}
-
-function calculate(){
-
-let balances=new Array(people.length).fill(0);
-
-expenses.forEach(e=>{
-
-let share=e.amount/people.length;
-
-balances[e.payer]+=e.amount;
-
-for(let i=0;i<people.length;i++){
-
-balances[i]-=share;
-
-}
-
-});
-
-let ul=document.getElementById("balances");
-
-ul.innerHTML="";
-
-balances.forEach((b,i)=>{
-
-ul.innerHTML+=`
-
-<li class="${b>=0?'balance-positive':'balance-negative'}">
-
-${people[i]} :
-
-${b>=0?'+':''}$${b.toFixed(2)}
-
-</li>
-
-`;
-
-});
-
-}
-
-renderPeople();
-
-renderExpenses();
-
-calculate();
-
+    // Configuración de los miembros de la familia
+    const familyMembers = ["Mamá", "Papá", "Hijo/a 1", "Hijo/a 2"];
+    
+    // Cargar datos guardados o iniciar vacíos
+    let expenses = JSON.parse(localStorage.getItem('familyExpenses')) || [];
+
+    const expenseForm = document.getElementById('expenseForm');
+    const expenseList = document.getElementById('expenseList');
+    const balanceList = document.getElementById('balanceList');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // Función para calcular saldos
+    function calculateBalances() {
+        // Inicializar saldos en 0 para cada uno
+        let balances = {};
+        familyMembers.forEach(member => balances[member] = 0);
+
+        // Calcular lo que puso cada uno y restar la parte equitativa
+        expenses.forEach(exp => {
+            const share = exp.amount / familyMembers.length;
+            familyMembers.forEach(member => {
+                if (member === exp.payer) {
+                    // Le deben el dinero que pagó menos su propia parte
+                    balances[member] += (exp.amount - share);
+                } else {
+                    // Debe su parte
+                    balances[member] -= share;
+                }
+            });
+        });
+
+        renderBalances(balances);
+    }
+
+    // Renderizar Saldos en pantalla
+    function renderBalances(balances) {
+        balanceList.innerHTML = '';
+        for (let member in balances) {
+            const li = document.createElement('li');
+            li.className = 'balance-item';
+            const amount = balances[member].toFixed(2);
+            
+            if (amount > 0) {
+                li.innerHTML = `<span>${member}</span> <span class="creditor">Le deben $${amount}</span>`;
+            } else if (amount < 0) {
+                li.innerHTML = `<span>${member}</span> <span class="debtor">Debe $${Math.abs(amount)}</span>`;
+            } else {
+                li.innerHTML = `<span>${member}</span> <span>Al día $0.00</span>`;
+            }
+            balanceList.appendChild(li);
+        }
+    }
+
+    // Renderizar Historial de Gastos
+    function renderExpenses() {
+        expenseList.innerHTML = '';
+        expenses.forEach(exp => {
+            const li = document.createElement('li');
+            li.className = 'expense-item';
+            li.innerHTML = `
+                <span><strong>${exp.payer}</strong> pagó $${exp.amount} por <i>${exp.concept}</i></span>
+            `;
+            expenseList.appendChild(li);
+        });
+    }
+
+    // Guardar y Actualizar
+    function updateApp() {
+        localStorage.setItem('familyExpenses', JSON.stringify(expenses));
+        renderExpenses();
+        calculateBalances();
+    }
+
+    // Evento al agregar gasto
+    expenseForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const payer = document.getElementById('payer').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const concept = document.getElementById('concept').value;
+
+        expenses.push({ payer, amount, concept });
+        updateApp();
+        expenseForm.reset();
+    });
+
+    // Reiniciar aplicación
+    clearBtn.addEventListener('click', () => {
+        if(confirm('¿Seguro que quieres borrar todos los gastos y empezar de cero?')) {
+            expenses = [];
+            updateApp();
+        }
+    });
+
+    // Carga inicial
+    updateApp();
 </script>
-
 </body>
 </html>
