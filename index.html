@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Splitwise: Camila & Nicolás</title>
-    <!-- Iconos amigables -->
+    <title>Splitwise Sincronizado: Camila & Nicolás</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -14,8 +13,6 @@
             --text-dark: #2d3748;
             --text-muted: #718096;
             --card-bg: #ffffff;
-            
-            /* Colores de categorías */
             --col-comida: #ffb703;
             --col-fijos: #3a86ff;
             --col-dividendos: #8338ec;
@@ -33,34 +30,17 @@
             justify-content: center;
         }
 
-        .container {
-            width: 100%;
-            max-width: 650px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #1a202c;
-        }
-
-        p.subtitle {
-            margin: 5px 0 0;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
+        .container { width: 100%; max-width: 650px; }
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { margin: 0; font-size: 28px; color: #1a202c; }
+        p.subtitle { margin: 5px 0 0; color: var(--text-muted); font-size: 14px; }
 
         .card {
             background: var(--card-bg);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
         }
 
         h2 {
@@ -70,18 +50,9 @@
             color: #1a202c;
             border-bottom: 2px solid #edf2f7;
             padding-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        /* Sección de balances rápida para dos personas */
-        .balance-box {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
+        .balance-box { display: flex; flex-direction: column; gap: 12px; }
         .balance-summary {
             background-color: #f7fafc;
             border-radius: 12px;
@@ -91,234 +62,43 @@
             font-weight: 600;
             border-left: 5px solid var(--primary);
         }
+        .balance-summary.neutral { border-left-color: var(--text-muted); }
+        .balance-summary.debt { border-left-color: #e53e3e; background-color: #fff5f5; }
 
-        .balance-summary.neutral {
-            border-left-color: var(--text-muted);
-        }
+        .personal-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .total-card { background: #f7fafc; padding: 12px; border-radius: 10px; text-align: center; }
+        .total-card p { margin: 0; font-size: 12px; color: var(--text-muted); }
+        .total-card span { font-size: 18px; font-weight: bold; }
 
-        .balance-summary.debt {
-            border-left-color: #e53e3e;
-            background-color: #fff5f5;
-        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        label { margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #4a5568; }
+        input, select, button { padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        button.btn-add { background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button.btn-add:hover { background-color: var(--primary-dark); }
 
-        .personal-totals {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 10px;
-        }
+        .chart-wrapper { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .category-row { display: flex; flex-direction: column; gap: 4px; }
+        .category-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; }
+        .category-bar-bg { background-color: #edf2f7; height: 10px; border-radius: 5px; overflow: hidden; }
+        .category-bar-fill { height: 100%; border-radius: 5px; width: 0%; transition: width 0.5s; }
 
-        .total-card {
-            background: #f7fafc;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .total-card p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .total-card span {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2d3748;
-        }
-
-        /* Formulario */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        @media (max-width: 480px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group.full-width {
-            grid-column: span 2;
-        }
-
-        @media (max-width: 480px) {
-            .form-group.full-width {
-                grid-column: span 1;
-            }
-        }
-
-        label {
-            margin-bottom: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-        }
-
-        input, select, button {
-            padding: 12px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary);
-        }
-
-        button.btn-add {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        button.btn-add:hover {
-            background-color: var(--primary-dark);
-        }
-
-        /* Gráfico de Categorías */
-        .chart-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .category-row {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .category-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .category-bar-bg {
-            background-color: #edf2f7;
-            height: 10px;
-            border-radius: 5px;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .category-bar-fill {
-            height: 100%;
-            border-radius: 5px;
-            width: 0%;
-            transition: width 0.5s ease-out;
-        }
-
-        /* Historial de Gastos */
-        .expense-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .expense-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #edf2f7;
-        }
-
-        .expense-item:last-child {
-            border-bottom: none;
-        }
-
-        .expense-details {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .category-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-        }
-
-        .expense-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .expense-title {
-            font-weight: 600;
-            font-size: 14px;
-            color: #2d3748;
-        }
-
-        .expense-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .expense-amount-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .expense-value {
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .btn-delete {
-            background: none;
-            border: none;
-            color: #a0aec0;
-            cursor: pointer;
-            padding: 5px;
-            font-size: 14px;
-            transition: color 0.2s;
-            width: auto;
-        }
-
-        .btn-delete:hover {
-            color: #e53e3e;
-        }
-
-        .btn-reset {
-            background-color: #fff5f5;
-            color: #e53e3e;
-            border: 1px dashed #feb2b2;
-            cursor: pointer;
-            margin-top: 15px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-reset:hover {
-            background-color: #fff0f0;
-        }
+        .expense-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
+        .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf2f7; }
+        .expense-details { display: flex; align-items: center; gap: 10px; }
+        .category-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
+        .expense-text { display: flex; flex-direction: column; }
+        .expense-title { font-weight: 600; font-size: 14px; }
+        .expense-meta { font-size: 11px; color: var(--text-muted); }
+        .expense-amount-actions { display: flex; align-items: center; gap: 12px; }
+        .expense-value { font-weight: 700; font-size: 14px; }
+        
+        .btn-delete { background: none; border: none; color: #a0aec0; cursor: pointer; padding: 5px; font-size: 14px; }
+        .btn-delete:hover { color: #e53e3e; }
+        .btn-reset { background-color: #fff5f5; color: #e53e3e; border: 1px dashed #feb2b2; cursor: pointer; margin-top: 15px; font-size: 14px; font-weight: 600; width: 100%; }
     </style>
 </head>
 <body>
@@ -326,88 +106,31 @@
 <div class="container">
     <header>
         <h1>🏡 Gastos Compartidos</h1>
-        <p class="subtitle">Camila & Nicolás</p>
+        <p class="subtitle">Sincronizado en tiempo real</p>
     </header>
 
-    <!-- 1. Balances de Cuentas -->
     <div class="card">
         <h2>Saldos y Cuentas</h2>
         <div class="balance-box">
-            <div id="balanceMessage" class="balance-summary neutral">
-                Calculando cuentas...
-            </div>
-            
+            <div id="balanceMessage" class="balance-summary neutral">Conectando con la base de datos...</div>
             <div class="personal-totals">
-                <div class="total-card">
-                    <p>Aportado por Camila</p>
-                    <span id="totalCamila">$0</span>
-                </div>
-                <div class="total-card">
-                    <p>Aportado por Nicolás</p>
-                    <span id="totalNicolas">$0</span>
-                </div>
+                <div class="total-card"><p>Aportado por Camila</p><span id="totalCamila">$0</span></div>
+                <div class="total-card"><p>Aportado por Nicolás</p><span id="totalNicolas">$0</span></div>
             </div>
         </div>
     </div>
 
-    <!-- 2. Gráfico por Categorías -->
     <div class="card">
         <h2>Gastos por Categoría</h2>
         <div class="chart-wrapper">
-            <!-- Comida -->
-            <div class="category-row">
-                <div class="category-info">
-                    <span>🍔 Comida</span>
-                    <span id="txt-comida">$0 (0%)</span>
-                </div>
-                <div class="category-bar-bg">
-                    <div id="bar-comida" class="category-bar-fill" style="background-color: var(--col-comida);"></div>
-                </div>
-            </div>
-            <!-- Gastos Fijos -->
-            <div class="category-row">
-                <div class="category-info">
-                    <span>⚡ Gastos Fijos</span>
-                    <span id="txt-fijos">$0 (0%)</span>
-                </div>
-                <div class="category-bar-bg">
-                    <div id="bar-fijos" class="category-bar-fill" style="background-color: var(--col-fijos);"></div>
-                </div>
-            </div>
-            <!-- Dividendos -->
-            <div class="category-row">
-                <div class="category-info">
-                    <span>📈 Dividendos</span>
-                    <span id="txt-dividendos">$0 (0%)</span>
-                </div>
-                <div class="category-bar-bg">
-                    <div id="bar-dividendos" class="category-bar-fill" style="background-color: var(--col-dividendos);"></div>
-                </div>
-            </div>
-            <!-- Crédito Hipotecario -->
-            <div class="category-row">
-                <div class="category-info">
-                    <span>🏠 Crédito Hipotecario</span>
-                    <span id="txt-hipotecario">$0 (0%)</span>
-                </div>
-                <div class="category-bar-bg">
-                    <div id="bar-hipotecario" class="category-bar-fill" style="background-color: var(--col-hipotecario);"></div>
-                </div>
-            </div>
-            <!-- Otros -->
-            <div class="category-row">
-                <div class="category-info">
-                    <span>📦 Otros</span>
-                    <span id="txt-otros">$0 (0%)</span>
-                </div>
-                <div class="category-bar-bg">
-                    <div id="bar-otros" class="category-bar-fill" style="background-color: var(--col-otros);"></div>
-                </div>
-            </div>
+            <div class="category-row"><div class="category-info"><span>🍔 Comida</span><span id="txt-comida">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-comida" class="category-bar-fill" style="background-color: var(--col-comida);"></div></div></div>
+            <div class="category-row"><div class="category-info"><span>⚡ Gastos Fijos</span><span id="txt-fijos">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-fijos" class="category-bar-fill" style="background-color: var(--col-fijos);"></div></div></div>
+            <div class="category-row"><div class="category-info"><span>📈 Dividendos</span><span id="txt-dividendos">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-dividendos" class="category-bar-fill" style="background-color: var(--col-dividendos);"></div></div></div>
+            <div class="category-row"><div class="category-info"><span>🏠 Crédito Hipotecario</span><span id="txt-hipotecario">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-hipotecario" class="category-bar-fill" style="background-color: var(--col-hipotecario);"></div></div></div>
+            <div class="category-row"><div class="category-info"><span>📦 Otros</span><span id="txt-otros">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-otros" class="category-bar-fill" style="background-color: var(--col-otros);"></div></div></div>
         </div>
     </div>
 
-    <!-- 3. Formulario para agregar gasto -->
     <div class="card">
         <h2>Nuevo Gasto</h2>
         <form id="expenseForm">
@@ -431,29 +154,45 @@
                 </div>
                 <div class="form-group">
                     <label for="amount">Monto ($)</label>
-                    <input type="number" id="amount" min="1" step="any" placeholder="Ej: 15000" required>
+                    <input type="number" id="amount" min="1" step="any" required>
                 </div>
                 <div class="form-group">
                     <label for="concept">Concepto</label>
-                    <input type="text" id="concept" placeholder="Ej: Compras del mes" required>
+                    <input type="text" id="concept" required>
                 </div>
             </div>
             <button type="submit" class="btn-add">Dividir 50 / 50</button>
         </form>
     </div>
 
-    <!-- 4. Historial de Gastos -->
     <div class="card">
         <h2>Historial de Gastos</h2>
-        <ul id="expenseList" class="expense-list">
-            <!-- Se llena con JS -->
-        </ul>
-        <button id="clearBtn" class="btn-reset">Limpiar Historial</button>
+        <ul id="expenseList" class="expense-list"></ul>
+        <button id="clearBtn" class="btn-reset">Limpiar Todo el Historial</button>
     </div>
 </div>
 
-<script>
-    // Configuración de categorías
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { 
+        getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, writeBatch 
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    // Tu configuración oficial de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAKStT0NSWpJ9aVdr201PvPf-6T1kq2OQo",
+        authDomain: "splitwise-familiar.firebaseapp.com",
+        projectId: "splitwise-familiar",
+        storageBucket: "splitwise-familiar.firebasestorage.app",
+        messagingSenderId: "905428418783",
+        appId: "1:905428418783:web:aba3668a7acc088e8ea96a"
+    };
+
+    // Inicializar app de Firebase y base de datos Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const expensesCollection = collection(db, "gastos");
+
     const categoryConfig = {
         comida: { label: 'Comida', icon: 'fa-hamburger', color: 'var(--col-comida)' },
         fijos: { label: 'Gastos Fijos', icon: 'fa-bolt', color: 'var(--col-fijos)' },
@@ -462,69 +201,58 @@
         otros: { label: 'Otros', icon: 'fa-box', color: 'var(--col-otros)' }
     };
 
-    // Datos iniciales
-    let expenses = JSON.parse(localStorage.getItem('coupleExpenses')) || [];
+    let localExpenses = [];
 
-    const expenseForm = document.getElementById('expenseForm');
-    const expenseList = document.getElementById('expenseList');
-    const balanceMessage = document.getElementById('balanceMessage');
-    const totalCamila = document.getElementById('totalCamila');
-    const totalNicolas = document.getElementById('totalNicolas');
-    const clearBtn = document.getElementById('clearBtn');
-
-    // Función principal para recalcular todo
-    function updateApp() {
-        // Guardar en LocalStorage
-        localStorage.setItem('coupleExpenses', JSON.stringify(expenses));
+    // Monitoreo en tiempo real
+    onSnapshot(expensesCollection, (snapshot) => {
+        localExpenses = [];
+        snapshot.forEach((doc) => {
+            localExpenses.push({ id: doc.id, ...doc.data() });
+        });
         
+        localExpenses.sort((a, b) => b.createdAt - a.createdAt);
+        renderApp();
+    });
+
+    function renderApp() {
         calculateTotalsAndBalances();
         updateCategoryChart();
         renderExpenseList();
     }
 
-    // Calcula deudas y aportes
     function calculateTotalsAndBalances() {
         let spentCamila = 0;
         let spentNicolas = 0;
 
-        expenses.forEach(exp => {
+        localExpenses.forEach(exp => {
             const val = parseFloat(exp.amount) || 0;
-            if (exp.payer === 'Camila') {
-                spentCamila += val;
-            } else if (exp.payer === 'Nicolás') {
-                spentNicolas += val;
-            }
+            if (exp.payer === 'Camila') spentCamila += val;
+            else if (exp.payer === 'Nicolás') spentNicolas += val;
         });
 
-        // Mostrar total aportado por cada uno
-        totalCamila.textContent = formatCurrency(spentCamila);
-        totalNicolas.textContent = formatCurrency(spentNicolas);
+        document.getElementById('totalCamila').textContent = formatCurrency(spentCamila);
+        document.getElementById('totalNicolas').textContent = formatCurrency(spentNicolas);
 
-        const totalSpent = spentCamila + spentNicolas;
-        const fairShare = totalSpent / 2;
-
-        // Calcular deudas
+        const balanceMessage = document.getElementById('balanceMessage');
         if (spentCamila > spentNicolas) {
             const debt = (spentCamila - spentNicolas) / 2;
             balanceMessage.className = "balance-summary debt";
-            balanceMessage.innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left"></i> <strong>Nicolás</strong> le debe <strong>${formatCurrency(debt)}</strong> a Camila`;
+            balanceMessage.innerHTML = `<strong>Nicolás</strong> le debe <strong>${formatCurrency(debt)}</strong> a Camila`;
         } else if (spentNicolas > spentCamila) {
             const debt = (spentNicolas - spentCamila) / 2;
             balanceMessage.className = "balance-summary debt";
-            balanceMessage.innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left"></i> <strong>Camila</strong> le debe <strong>${formatCurrency(debt)}</strong> a Nicolás`;
+            balanceMessage.innerHTML = `<strong>Camila</strong> le debe <strong>${formatCurrency(debt)}</strong> a Nicolás`;
         } else {
             balanceMessage.className = "balance-summary neutral";
-            balanceMessage.innerHTML = `<i class="fa-solid fa-check-double"></i> ¡Están totalmente al día!`;
+            balanceMessage.innerHTML = `¡Están totalmente al día!`;
         }
     }
 
-    // Actualiza los gráficos de barra de categorías
     function updateCategoryChart() {
-        // Inicializar sumas en cero
         const totals = { comida: 0, fijos: 0, dividendos: 0, hipotecario: 0, otros: 0 };
         let grandTotal = 0;
 
-        expenses.forEach(exp => {
+        localExpenses.forEach(exp => {
             const val = parseFloat(exp.amount) || 0;
             if (totals[exp.category] !== undefined) {
                 totals[exp.category] += val;
@@ -532,95 +260,83 @@
             }
         });
 
-        // Renderizar valores y ajustar anchos de barra
         for (let cat in totals) {
             const amount = totals[cat];
             const percent = grandTotal > 0 ? ((amount / grandTotal) * 100).toFixed(0) : 0;
-            
             document.getElementById(`txt-${cat}`).textContent = `${formatCurrency(amount)} (${percent}%)`;
             document.getElementById(`bar-${cat}`).style.width = `${percent}%`;
         }
     }
 
-    // Renderizar la lista de gastos
     function renderExpenseList() {
+        const expenseList = document.getElementById('expenseList');
         expenseList.innerHTML = '';
         
-        if (expenses.length === 0) {
-            expenseList.innerHTML = `<li style="text-align:center; padding: 20px; color: var(--text-muted); font-size:14px;">No hay gastos registrados aún.</li>`;
+        if (localExpenses.length === 0) {
+            expenseList.innerHTML = `<li style="text-align:center; padding:20px; color:var(--text-muted); font-size:14px;">No hay gastos registrados.</li>`;
             return;
         }
 
-        // Mostrar de más nuevos a más viejos
-        const reversedExpenses = [...expenses].reverse();
-
-        reversedExpenses.forEach((exp, index) => {
-            const originalIndex = expenses.length - 1 - index; // Ajustar índice para borrar correcto
+        localExpenses.forEach((exp) => {
             const config = categoryConfig[exp.category] || categoryConfig.otros;
-            
             const li = document.createElement('li');
             li.className = 'expense-item';
             li.innerHTML = `
                 <div class="expense-details">
-                    <div class="category-icon" style="background-color: ${config.color}">
-                        <i class="fa-solid ${config.icon}"></i>
-                    </div>
+                    <div class="category-icon" style="background-color: ${config.color}"><i class="fa-solid ${config.icon}"></i></div>
                     <div class="expense-text">
                         <span class="expense-title">${exp.concept}</span>
-                        <span class="expense-meta">Pagado por ${exp.payer}</span>
+                        <span class="expense-meta">Por ${exp.payer}</span>
                     </div>
                 </div>
                 <div class="expense-amount-actions">
                     <span class="expense-value">${formatCurrency(exp.amount)}</span>
-                    <button class="btn-delete" onclick="deleteExpense(${originalIndex})" title="Eliminar gasto">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    <button class="btn-delete" data-id="${exp.id}"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             `;
             expenseList.appendChild(li);
         });
+
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                if(confirm('¿Eliminar este gasto?')) {
+                    await deleteDoc(doc(db, "gastos", id));
+                }
+            });
+        });
     }
 
-    // Eliminar un gasto en particular
-    window.deleteExpense = function(index) {
-        if(confirm('¿Seguro de que deseas eliminar este gasto?')) {
-            expenses.splice(index, 1);
-            updateApp();
-        }
-    };
-
-    // Agregar un gasto
-    expenseForm.addEventListener('submit', (e) => {
+    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const payer = document.getElementById('payer').value;
         const category = document.getElementById('category').value;
         const amount = parseFloat(document.getElementById('amount').value);
         const concept = document.getElementById('concept').value;
 
-        expenses.push({ payer, category, amount, concept });
-        updateApp();
-        
-        // Resetear formulario manteniendo la lógica
+        await addDoc(expensesCollection, {
+            payer, category, amount, concept,
+            createdAt: Date.now()
+        });
+
         document.getElementById('amount').value = '';
         document.getElementById('concept').value = '';
     });
 
-    // Resetear todo
-    clearBtn.addEventListener('click', () => {
-        if(confirm('¿Quieres borrar absolutamente todos los gastos? Esto reiniciará las cuentas a $0.')) {
-            expenses = [];
-            updateApp();
+    document.getElementById('clearBtn').addEventListener('click', async () => {
+        if(confirm('¿Borrar definitivamente todos los datos de la nube?')) {
+            const querySnapshot = await getDocs(expensesCollection);
+            const batch = writeBatch(db);
+            querySnapshot.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
         }
     });
 
-    // Formateador de moneda de Chile/General (CLP / USD estándar)
     function formatCurrency(value) {
         return '$' + Math.round(value).toLocaleString('es-CL');
     }
-
-    // Inicialización al cargar la página
-    updateApp();
 </script>
 </body>
 </html>
