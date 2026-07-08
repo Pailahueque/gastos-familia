@@ -3,340 +3,538 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Splitwise Sincronizado: Camila & Nicolás</title>
+    <title>Splitwise: Camila & Nicolás</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        :root {
-            --primary: #1cc88a;
-            --primary-dark: #17a673;
-            --background: #f4f6f9;
-            --text-dark: #2d3748;
-            --text-muted: #718096;
-            --card-bg: #ffffff;
-            --col-comida: #ffb703;
-            --col-fijos: #3a86ff;
-            --col-dividendos: #8338ec;
-            --col-hipotecario: #fb5607;
-            --col-otros: #ff006e;
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eefaf4',
+                            100: '#dcf5e9',
+                            500: '#1cc88a',
+                            600: '#17a673',
+                            700: '#128259',
+                        }
+                    }
+                }
+            }
         }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--background);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container { width: 100%; max-width: 650px; }
-        header { text-align: center; margin-bottom: 25px; }
-        h1 { margin: 0; font-size: 28px; color: #1a202c; }
-        p.subtitle { margin: 5px 0 0; color: var(--text-muted); font-size: 14px; }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-        }
-
-        h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 18px;
-            color: #1a202c;
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 8px;
-        }
-
-        .balance-box { display: flex; flex-direction: column; gap: 12px; }
-        .balance-summary {
-            background-color: #f7fafc;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 600;
-            border-left: 5px solid var(--primary);
-        }
-        .balance-summary.neutral { border-left-color: var(--text-muted); }
-        .balance-summary.debt { border-left-color: #e53e3e; background-color: #fff5f5; }
-
-        .personal-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
-        .total-card { background: #f7fafc; padding: 12px; border-radius: 10px; text-align: center; }
-        .total-card p { margin: 0; font-size: 12px; color: var(--text-muted); }
-        .total-card span { font-size: 18px; font-weight: bold; }
-
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
-        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
-        label { margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #4a5568; }
-        input, select, button { padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
-        
-        button.btn-add { background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button.btn-add:hover { background-color: var(--primary-dark); }
-
-        .chart-wrapper { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-        .category-row { display: flex; flex-direction: column; gap: 4px; }
-        .category-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; }
-        .category-bar-bg { background-color: #edf2f7; height: 10px; border-radius: 5px; overflow: hidden; }
-        .category-bar-fill { height: 100%; border-radius: 5px; width: 0%; transition: width 0.5s; }
-
-        .expense-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
-        .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf2f7; }
-        .expense-details { display: flex; align-items: center; gap: 10px; }
-        .category-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
-        .expense-text { display: flex; flex-direction: column; }
-        .expense-title { font-weight: 600; font-size: 14px; }
-        .expense-meta { font-size: 11px; color: var(--text-muted); }
-        .expense-amount-actions { display: flex; align-items: center; gap: 12px; }
-        .expense-value { font-weight: 700; font-size: 14px; }
-        
-        .btn-delete { background: none; border: none; color: #a0aec0; cursor: pointer; padding: 5px; font-size: 14px; }
-        .btn-delete:hover { color: #e53e3e; }
-        .btn-reset { background-color: #fff5f5; color: #e53e3e; border: 1px dashed #feb2b2; cursor: pointer; margin-top: 15px; font-size: 14px; font-weight: 600; width: 100%; }
-    </style>
+    </script>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased flex flex-col justify-between">
 
-<div class="container">
-    <header>
-        <h1>🏡 Gastos Compartidos</h1>
-        <p class="subtitle">Sincronizado en tiempo real</p>
-    </header>
-
-    <div class="card">
-        <h2>Saldos y Cuentas</h2>
-        <div class="balance-box">
-            <div id="balanceMessage" class="balance-summary neutral">Conectando con la base de datos...</div>
-            <div class="personal-totals">
-                <div class="total-card"><p>Aportado por Camila</p><span id="totalCamila">$0</span></div>
-                <div class="total-card"><p>Aportado por Nicolás</p><span id="totalNicolas">$0</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Gastos por Categoría</h2>
-        <div class="chart-wrapper">
-            <div class="category-row"><div class="category-info"><span>🍔 Comida</span><span id="txt-comida">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-comida" class="category-bar-fill" style="background-color: var(--col-comida);"></div></div></div>
-            <div class="category-row"><div class="category-info"><span>⚡ Gastos Fijos</span><span id="txt-fijos">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-fijos" class="category-bar-fill" style="background-color: var(--col-fijos);"></div></div></div>
-            <div class="category-row"><div class="category-info"><span>📈 Dividendos</span><span id="txt-dividendos">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-dividendos" class="category-bar-fill" style="background-color: var(--col-dividendos);"></div></div></div>
-            <div class="category-row"><div class="category-info"><span>🏠 Crédito Hipotecario</span><span id="txt-hipotecario">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-hipotecario" class="category-bar-fill" style="background-color: var(--col-hipotecario);"></div></div></div>
-            <div class="category-row"><div class="category-info"><span>📦 Otros</span><span id="txt-otros">$0 (0%)</span></div><div class="category-bar-bg"><div id="bar-otros" class="category-bar-fill" style="background-color: var(--col-otros);"></div></div></div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Nuevo Gasto</h2>
-        <form id="expenseForm">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="payer">¿Quién pagó?</label>
-                    <select id="payer" required>
-                        <option value="Camila">Camila</option>
-                        <option value="Nicolás">Nicolás</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="category">Categoría</label>
-                    <select id="category" required>
-                        <option value="comida">🍔 Comida</option>
-                        <option value="fijos">⚡ Gastos Fijos</option>
-                        <option value="dividendos">📈 Dividendos</option>
-                        <option value="hipotecario">🏠 Crédito Hipotecario</option>
-                        <option value="otros">📦 Otros</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="amount">Monto ($)</label>
-                    <input type="number" id="amount" min="1" step="any" required>
-                </div>
-                <div class="form-group">
-                    <label for="concept">Concepto</label>
-                    <input type="text" id="concept" required>
-                </div>
-            </div>
-            <button type="submit" class="btn-add">Dividir 50 / 50</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h2>Historial de Gastos</h2>
-        <ul id="expenseList" class="expense-list"></ul>
-        <button id="clearBtn" class="btn-reset">Limpiar Todo el Historial</button>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-    import { 
-        getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, writeBatch 
-    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-
-    // Tu configuración oficial de Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyAKStT0NSWpJ9aVdr201PvPf-6T1kq2OQo",
-        authDomain: "splitwise-familiar.firebaseapp.com",
-        projectId: "splitwise-familiar",
-        storageBucket: "splitwise-familiar.firebasestorage.app",
-        messagingSenderId: "905428418783",
-        appId: "1:905428418783:web:aba3668a7acc088e8ea96a"
-    };
-
-    // Inicializar app de Firebase y base de datos Firestore
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const expensesCollection = collection(db, "gastos");
-
-    const categoryConfig = {
-        comida: { label: 'Comida', icon: 'fa-hamburger', color: 'var(--col-comida)' },
-        fijos: { label: 'Gastos Fijos', icon: 'fa-bolt', color: 'var(--col-fijos)' },
-        dividendos: { label: 'Dividendos', icon: 'fa-chart-line', color: 'var(--col-dividendos)' },
-        hipotecario: { label: 'Crédito Hipotecario', icon: 'fa-home', color: 'var(--col-hipotecario)' },
-        otros: { label: 'Otros', icon: 'fa-box', color: 'var(--col-otros)' }
-    };
-
-    let localExpenses = [];
-
-    // Monitoreo en tiempo real
-    onSnapshot(expensesCollection, (snapshot) => {
-        localExpenses = [];
-        snapshot.forEach((doc) => {
-            localExpenses.push({ id: doc.id, ...doc.data() });
-        });
+    <div class="w-full max-w-xl mx-auto px-4 py-6 flex-grow">
         
-        localExpenses.sort((a, b) => b.createdAt - a.createdAt);
-        renderApp();
-    });
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <div class="inline-flex items-center justify-center bg-brand-100 text-brand-600 w-12 h-12 rounded-full mb-2">
+                <i class="fa-solid fa-house-laptop text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Gastos Compartidos</h1>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1">Camila & Nicolás</p>
+        </header>
 
-    function renderApp() {
-        calculateTotalsAndBalances();
-        updateCategoryChart();
-        renderExpenseList();
+        <!-- Banner Inteligente de Conexión -->
+        <div id="connectionBanner" class="mb-5 p-4 rounded-xl text-sm border transition-all duration-300 shadow-sm">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                    <span class="relative flex h-3 w-3">
+                        <span id="pingDotBg" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span id="pingDot" class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                    </span>
+                    <span id="connectionText" class="font-medium">Conectando con la base de datos...</span>
+                </div>
+                <button id="helpBtn" class="hidden text-xs bg-white text-amber-700 px-2.5 py-1 rounded-md border border-amber-200 hover:bg-amber-50 font-semibold transition-colors">
+                    ¿Cómo configurar?
+                </button>
+            </div>
+            
+            <!-- Guía de Configuración Rápida de Firebase Rules -->
+            <div id="helpGuide" class="hidden mt-4 pt-4 border-t border-amber-100 text-amber-900 leading-relaxed text-xs">
+                <div class="flex items-center gap-2 font-bold mb-2 text-amber-800">
+                    <i class="fa-solid fa-circle-exclamation text-base"></i>
+                    <span>¿Por qué se activó el Modo Local?</span>
+                </div>
+                <p>Es probable que aún falte configurar las Reglas de Seguridad en tu consola de Firebase. Sigue estos simples pasos para solucionarlo:</p>
+                <ol class="list-decimal list-inside space-y-1.5 mt-2 bg-amber-50/50 p-3 rounded-lg border border-amber-100">
+                    <li>Entra a la <a href="https://console.firebase.google.com/" target="_blank" class="underline font-bold hover:text-amber-700">Consola de Firebase</a>.</li>
+                    <li>Ve a tu proyecto y haz clic en <strong>Firestore Database</strong> en el menú izquierdo.</li>
+                    <li>Entra en la pestaña superior llamada <strong>Reglas</strong> (Rules).</li>
+                    <li>Reemplaza el código por este bloque completo:</li>
+                    <pre class="bg-slate-900 text-slate-200 p-2.5 rounded-md my-2 overflow-x-auto text-[10px] font-mono">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
     }
+  }
+}</pre>
+                    <li>Haz clic en el botón azul de <strong>Publicar</strong>. ¡La app se sincronizará automáticamente!</li>
+                </ol>
+            </div>
+        </div>
 
-    function calculateTotalsAndBalances() {
-        let spentCamila = 0;
-        let spentNicolas = 0;
+        <!-- Tarjeta de Saldos y Cuentas -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-5">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Saldos y Cuentas</h2>
+            
+            <!-- Mensaje del saldo principal -->
+            <div id="balanceMessage" class="rounded-xl p-4 text-center font-bold text-sm border mb-4 bg-slate-50 text-slate-500 border-slate-100">
+                Calculando deudas actuales...
+            </div>
 
-        localExpenses.forEach(exp => {
-            const val = parseFloat(exp.amount) || 0;
-            if (exp.payer === 'Camila') spentCamila += val;
-            else if (exp.payer === 'Nicolás') spentNicolas += val;
-        });
+            <!-- Totales individuales -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100/80 text-center">
+                    <p class="text-xs text-slate-400 font-medium mb-1">Aportado por Camila</p>
+                    <span id="totalCamila" class="text-lg font-bold text-slate-800">$0</span>
+                </div>
+                <div class="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100/80 text-center">
+                    <p class="text-xs text-slate-400 font-medium mb-1">Aportado por Nicolás</p>
+                    <span id="totalNicolas" class="text-lg font-bold text-slate-800">$0</span>
+                </div>
+            </div>
+        </div>
 
-        document.getElementById('totalCamila').textContent = formatCurrency(spentCamila);
-        document.getElementById('totalNicolas').textContent = formatCurrency(spentNicolas);
+        <!-- Tarjeta de Gastos por Categoría -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-5">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Gastos por Categoría</h2>
+            
+            <div class="space-y-4">
+                <!-- Comida -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>🍔 Comida</span>
+                        <span id="txt-comida" class="text-slate-500">$0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-comida" class="bg-amber-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    </div>
+                </div>
 
-        const balanceMessage = document.getElementById('balanceMessage');
-        if (spentCamila > spentNicolas) {
-            const debt = (spentCamila - spentNicolas) / 2;
-            balanceMessage.className = "balance-summary debt";
-            balanceMessage.innerHTML = `<strong>Nicolás</strong> le debe <strong>${formatCurrency(debt)}</strong> a Camila`;
-        } else if (spentNicolas > spentCamila) {
-            const debt = (spentNicolas - spentCamila) / 2;
-            balanceMessage.className = "balance-summary debt";
-            balanceMessage.innerHTML = `<strong>Camila</strong> le debe <strong>${formatCurrency(debt)}</strong> a Nicolás`;
-        } else {
-            balanceMessage.className = "balance-summary neutral";
-            balanceMessage.innerHTML = `¡Están totalmente al día!`;
-        }
-    }
+                <!-- Gastos Fijos -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>⚡ Gastos Fijos</span>
+                        <span id="txt-fijos" class="text-slate-500">$0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-fijos" class="bg-blue-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    </div>
+                </div>
 
-    function updateCategoryChart() {
-        const totals = { comida: 0, fijos: 0, dividendos: 0, hipotecario: 0, otros: 0 };
-        let grandTotal = 0;
+                <!-- Dividendos -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>📈 Dividendos</span>
+                        <span id="txt-dividendos" class="text-slate-500">$0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-dividendos" class="bg-purple-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    </div>
+                </div>
 
-        localExpenses.forEach(exp => {
-            const val = parseFloat(exp.amount) || 0;
-            if (totals[exp.category] !== undefined) {
-                totals[exp.category] += val;
-                grandTotal += val;
+                <!-- Crédito Hipotecario -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>🏠 Crédito Hipotecario</span>
+                        <span id="txt-hipotecario" class="text-slate-500">$0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-hipotecario" class="bg-orange-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Otros -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span>📦 Otros</span>
+                        <span id="txt-otros" class="text-slate-500">$0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-otros" class="bg-pink-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Nuevo Gasto -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-5">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Nuevo Gasto</h2>
+            <form id="expenseForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="payer" class="text-xs font-bold text-slate-500 uppercase">¿Quién pagó?</label>
+                        <select id="payer" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                            <option value="Camila">Camila</option>
+                            <option value="Nicolás">Nicolás</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label for="category" class="text-xs font-bold text-slate-500 uppercase">Categoría</label>
+                        <select id="category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                            <option value="comida">🍔 Comida</option>
+                            <option value="fijos">⚡ Gastos Fijos</option>
+                            <option value="dividendos">📈 Dividendos</option>
+                            <option value="hipotecario">🏠 Crédito Hipotecario</option>
+                            <option value="otros">📦 Otros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="amount" class="text-xs font-bold text-slate-500 uppercase">Monto ($)</label>
+                        <input type="number" id="amount" min="1" step="any" placeholder="Monto total" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label for="concept" class="text-xs font-bold text-slate-500 uppercase">Concepto</label>
+                        <input type="text" id="concept" placeholder="¿En qué se gastó?" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-brand-500/20 active:translate-y-[1px] transition-all duration-150">
+                    <i class="fa-solid fa-divide mr-2"></i>Dividir 50 / 50
+                </button>
+            </form>
+        </div>
+
+        <!-- Tarjeta de Historial -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-5">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Historial de Gastos</h2>
+            <ul id="expenseList" class="divide-y divide-slate-100 max-h-72 overflow-y-auto pr-1">
+                <!-- Se llena con JS -->
+            </ul>
+            <button id="clearBtn" class="w-full mt-4 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-600 border border-rose-100 font-bold py-2.5 px-4 rounded-xl text-sm transition-colors">
+                <i class="fa-solid fa-rotate-left mr-2"></i>Limpiar Todo el Historial
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Footer decorativo -->
+    <footer class="text-center pb-6 text-[11px] font-semibold text-slate-400 tracking-wider">
+        DESARROLLADO PARA EL HOGAR 🏡 2026
+    </footer>
+
+    <!-- LOGICA DE LA APP E INTEGRACIÓN CON TU FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { 
+            getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, writeBatch 
+        } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+        // Configuración de Firebase oficial del usuario
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKStT0NSWpJ9aVdr201PvPf-6T1kq2OQo",
+            authDomain: "splitwise-familiar.firebaseapp.com",
+            projectId: "splitwise-familiar",
+            storageBucket: "splitwise-familiar.firebasestorage.app",
+            messagingSenderId: "905428418783",
+            appId: "1:905428418783:web:aba3668a7acc088e8ea96a"
+        };
+
+        const categoryConfig = {
+            comida: { label: 'Comida', icon: 'fa-hamburger', color: 'bg-amber-500' },
+            fijos: { label: 'Gastos Fijos', icon: 'fa-bolt', color: 'bg-blue-500' },
+            dividendos: { label: 'Dividendos', icon: 'fa-chart-line', color: 'bg-purple-500' },
+            hipotecario: { label: 'Crédito Hipotecario', icon: 'fa-house-chimney', color: 'bg-orange-500' },
+            otros: { label: 'Otros', icon: 'fa-box', color: 'bg-pink-500' }
+        };
+
+        let localExpenses = [];
+        let isLocalStorageMode = false;
+        let db;
+        let expensesCollection;
+        let firebaseUnsubscribe = null;
+
+        // Elementos DOM del Banner de Conexión
+        const banner = document.getElementById('connectionBanner');
+        const pingDotBg = document.getElementById('pingDotBg');
+        const pingDot = document.getElementById('pingDot');
+        const connText = document.getElementById('connectionText');
+        const helpBtn = document.getElementById('helpBtn');
+        const helpGuide = document.getElementById('helpGuide');
+
+        // Manejar el despliegue de ayuda para configurar reglas
+        helpBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (helpGuide.classList.contains('hidden')) {
+                helpGuide.classList.remove('hidden');
+                helpBtn.textContent = 'Ocultar ayuda';
+            } else {
+                helpGuide.classList.add('hidden');
+                helpBtn.textContent = '¿Cómo configurar?';
             }
         });
 
-        for (let cat in totals) {
-            const amount = totals[cat];
-            const percent = grandTotal > 0 ? ((amount / grandTotal) * 100).toFixed(0) : 0;
-            document.getElementById(`txt-${cat}`).textContent = `${formatCurrency(amount)} (${percent}%)`;
-            document.getElementById(`bar-${cat}`).style.width = `${percent}%`;
+        // Activar modo almacenamiento local provisional
+        function switchToLocalStorage(reasonMessage) {
+            if (isLocalStorageMode) return;
+            isLocalStorageMode = true;
+
+            if (firebaseUnsubscribe) {
+                firebaseUnsubscribe(); // cancelar oyente para evitar bloqueos
+            }
+
+            // Actualizar diseño del Banner a Estado Local
+            banner.className = "mb-5 p-4 rounded-xl text-xs border transition-all duration-300 shadow-sm bg-amber-50 text-amber-800 border-amber-200";
+            pingDotBg.className = "absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping";
+            pingDot.className = "relative inline-flex rounded-full h-3 w-3 bg-amber-500";
+            connText.innerHTML = `<strong>Modo Local Activo 💾</strong> - Tus datos se guardarán localmente en este dispositivo. No sincronizará online.`;
+            helpBtn.classList.remove('hidden');
+
+            loadLocalStorageExpenses();
+            renderApp();
         }
-    }
 
-    function renderExpenseList() {
-        const expenseList = document.getElementById('expenseList');
-        expenseList.innerHTML = '';
-        
-        if (localExpenses.length === 0) {
-            expenseList.innerHTML = `<li style="text-align:center; padding:20px; color:var(--text-muted); font-size:14px;">No hay gastos registrados.</li>`;
-            return;
+        // Cargar datos locales de LocalStorage
+        function loadLocalStorageExpenses() {
+            const stored = localStorage.getItem('local_splitwise_gastos');
+            if (stored) {
+                try {
+                    localExpenses = JSON.parse(stored);
+                } catch (e) {
+                    localExpenses = [];
+                }
+            } else {
+                localExpenses = [];
+            }
         }
 
-        localExpenses.forEach((exp) => {
-            const config = categoryConfig[exp.category] || categoryConfig.otros;
-            const li = document.createElement('li');
-            li.className = 'expense-item';
-            li.innerHTML = `
-                <div class="expense-details">
-                    <div class="category-icon" style="background-color: ${config.color}"><i class="fa-solid ${config.icon}"></i></div>
-                    <div class="expense-text">
-                        <span class="expense-title">${exp.concept}</span>
-                        <span class="expense-meta">Por ${exp.payer}</span>
-                    </div>
-                </div>
-                <div class="expense-amount-actions">
-                    <span class="expense-value">${formatCurrency(exp.amount)}</span>
-                    <button class="btn-delete" data-id="${exp.id}"><i class="fa-solid fa-trash-can"></i></button>
-                </div>
-            `;
-            expenseList.appendChild(li);
-        });
+        // Guardar datos locales en LocalStorage
+        function saveLocalStorageExpenses() {
+            localStorage.setItem('local_splitwise_gastos', JSON.stringify(localExpenses));
+        }
 
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.currentTarget.getAttribute('data-id');
-                if(confirm('¿Eliminar este gasto?')) {
-                    await deleteDoc(doc(db, "gastos", id));
+        // Inicialización segura de Firebase y fallback LocalStorage si se demora o falla
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            expensesCollection = collection(db, "gastos");
+
+            // Temporizador de conexión: si tarda más de 3 segundos, asume problema de conexión/permisos y entra en local
+            const connectionTimeout = setTimeout(() => {
+                if (!isLocalStorageMode && localExpenses.length === 0) {
+                    switchToLocalStorage();
+                }
+            }, 3000);
+
+            // Monitoreo en tiempo real de Firebase
+            firebaseUnsubscribe = onSnapshot(expensesCollection, (snapshot) => {
+                clearTimeout(connectionTimeout);
+                isLocalStorageMode = false;
+                
+                // Actualizar diseño del Banner a Online exitoso
+                banner.className = "mb-5 p-4 rounded-xl text-xs border transition-all duration-300 shadow-sm bg-emerald-50 text-emerald-800 border-emerald-200";
+                pingDotBg.className = "absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping";
+                pingDot.className = "relative inline-flex rounded-full h-3 w-3 bg-emerald-500";
+                connText.innerHTML = `<strong>Sincronizado en la Nube 🌐</strong> (Camila & Nicolás)`;
+                helpBtn.classList.add('hidden');
+                helpGuide.classList.add('hidden');
+
+                localExpenses = [];
+                snapshot.forEach((doc) => {
+                    localExpenses.push({ id: doc.id, ...doc.data() });
+                });
+                
+                localExpenses.sort((a, b) => b.createdAt - a.createdAt);
+                renderApp();
+            }, (error) => {
+                clearTimeout(connectionTimeout);
+                console.warn("Firestore bloqueado por reglas de seguridad:", error);
+                switchToLocalStorage();
+            });
+
+        } catch (e) {
+            console.error("Error al inicializar Firebase SDK:", e);
+            switchToLocalStorage();
+        }
+
+        function renderApp() {
+            calculateTotalsAndBalances();
+            updateCategoryChart();
+            renderExpenseList();
+        }
+
+        // Calcula totales individuales y quién le debe a quién
+        function calculateTotalsAndBalances() {
+            let spentCamila = 0;
+            let spentNicolas = 0;
+
+            localExpenses.forEach(exp => {
+                const val = parseFloat(exp.amount) || 0;
+                if (exp.payer === 'Camila') spentCamila += val;
+                else if (exp.payer === 'Nicolás') spentNicolas += val;
+            });
+
+            document.getElementById('totalCamila').textContent = formatCurrency(spentCamila);
+            document.getElementById('totalNicolas').textContent = formatCurrency(spentNicolas);
+
+            const balanceMessage = document.getElementById('balanceMessage');
+            if (spentCamila > spentNicolas) {
+                const debt = (spentCamila - spentNicolas) / 2;
+                balanceMessage.className = "rounded-xl p-4 text-center font-bold text-sm border bg-red-50 text-red-700 border-red-100 mb-4";
+                balanceMessage.innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left mr-2"></i> Nicolás debe <strong>${formatCurrency(debt)}</strong> a Camila`;
+            } else if (spentNicolas > spentCamila) {
+                const debt = (spentNicolas - spentCamila) / 2;
+                balanceMessage.className = "rounded-xl p-4 text-center font-bold text-sm border bg-red-50 text-red-700 border-red-100 mb-4";
+                balanceMessage.innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left mr-2"></i> Camila debe <strong>${formatCurrency(debt)}</strong> a Nicolás`;
+            } else {
+                balanceMessage.className = "rounded-xl p-4 text-center font-bold text-sm border bg-emerald-50 text-emerald-700 border-emerald-100 mb-4";
+                balanceMessage.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> ¡Están totalmente al día!`;
+            }
+        }
+
+        // Actualiza el porcentaje y el ancho de las barras de categoría
+        function updateCategoryChart() {
+            const totals = { comida: 0, fijos: 0, dividendos: 0, hipotecario: 0, otros: 0 };
+            let grandTotal = 0;
+
+            localExpenses.forEach(exp => {
+                const val = parseFloat(exp.amount) || 0;
+                if (totals[exp.category] !== undefined) {
+                    totals[exp.category] += val;
+                    grandTotal += val;
                 }
             });
-        });
-    }
 
-    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payer = document.getElementById('payer').value;
-        const category = document.getElementById('category').value;
-        const amount = parseFloat(document.getElementById('amount').value);
-        const concept = document.getElementById('concept').value;
-
-        await addDoc(expensesCollection, {
-            payer, category, amount, concept,
-            createdAt: Date.now()
-        });
-
-        document.getElementById('amount').value = '';
-        document.getElementById('concept').value = '';
-    });
-
-    document.getElementById('clearBtn').addEventListener('click', async () => {
-        if(confirm('¿Borrar definitivamente todos los datos de la nube?')) {
-            const querySnapshot = await getDocs(expensesCollection);
-            const batch = writeBatch(db);
-            querySnapshot.forEach((doc) => {
-                batch.delete(doc.ref);
-            });
-            await batch.commit();
+            for (let cat in totals) {
+                const amount = totals[cat];
+                const percent = grandTotal > 0 ? ((amount / grandTotal) * 100).toFixed(0) : 0;
+                document.getElementById(`txt-${cat}`).textContent = `${formatCurrency(amount)} (${percent}%)`;
+                document.getElementById(`bar-${cat}`).style.width = `${percent}%`;
+            }
         }
-    });
 
-    function formatCurrency(value) {
-        return '$' + Math.round(value).toLocaleString('es-CL');
-    }
-</script>
+        // Renderiza el feed de gastos
+        function renderExpenseList() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = '';
+            
+            if (localExpenses.length === 0) {
+                expenseList.innerHTML = `<li class="text-center py-6 text-slate-400 font-medium text-xs">No hay gastos registrados todavía.</li>`;
+                return;
+            }
+
+            localExpenses.forEach((exp) => {
+                const config = categoryConfig[exp.category] || categoryConfig.otros;
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center py-3 group hover:bg-slate-50 rounded-lg px-2 transition-all duration-150';
+                li.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs ${config.color} shadow-sm">
+                            <i class="fa-solid ${config.icon}"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold text-slate-800 leading-tight">${exp.concept}</span>
+                            <span class="text-[10px] text-slate-400 font-medium mt-0.5">Pagado por ${exp.payer}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-slate-800">${formatCurrency(exp.amount)}</span>
+                        <button class="btn-delete text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer" data-id="${exp.id}" title="Eliminar gasto">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>
+                `;
+                expenseList.appendChild(li);
+            });
+
+            // Registrar listeners para los botones de eliminación individuales
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    if(confirm('¿Seguro que deseas eliminar este gasto?')) {
+                        if (isLocalStorageMode) {
+                            localExpenses = localExpenses.filter(exp => exp.id !== id);
+                            saveLocalStorageExpenses();
+                            renderApp();
+                        } else {
+                            try {
+                                await deleteDoc(doc(db, "gastos", id));
+                            } catch (err) {
+                                console.error("Error al borrar en Firebase, forzando modo local:", err);
+                                switchToLocalStorage();
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // Procesar formulario de nuevo gasto
+        document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payer = document.getElementById('payer').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const concept = document.getElementById('concept').value;
+
+            const newExpense = {
+                payer, category, amount, concept,
+                createdAt: Date.now()
+            };
+
+            if (isLocalStorageMode) {
+                newExpense.id = 'local_' + Date.now();
+                localExpenses.unshift(newExpense);
+                saveLocalStorageExpenses();
+                renderApp();
+            } else {
+                try {
+                    await addDoc(expensesCollection, newExpense);
+                } catch (err) {
+                    console.error("Fallo de guardado en Firebase, guardando en local storage:", err);
+                    switchToLocalStorage();
+                    // Ejecutar guardado local de respaldo
+                    newExpense.id = 'local_' + Date.now();
+                    localExpenses.unshift(newExpense);
+                    saveLocalStorageExpenses();
+                    renderApp();
+                }
+            }
+
+            document.getElementById('amount').value = '';
+            document.getElementById('concept').value = '';
+        });
+
+        // Limpiar base de datos completa
+        document.getElementById('clearBtn').addEventListener('click', async () => {
+            if(confirm('¿Eliminar definitivamente todos los gastos del historial? Esto reiniciará las cuentas.')) {
+                if (isLocalStorageMode) {
+                    localExpenses = [];
+                    localStorage.removeItem('local_splitwise_gastos');
+                    renderApp();
+                } else {
+                    try {
+                        const querySnapshot = await getDocs(expensesCollection);
+                        const batch = writeBatch(db);
+                        querySnapshot.forEach((doc) => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    } catch (err) {
+                        console.error("Error al limpiar base de datos remota:", err);
+                        switchToLocalStorage();
+                    }
+                }
+            }
+        });
+
+        function formatCurrency(value) {
+            return '$' + Math.round(value).toLocaleString('es-CL');
+        }
+    </script>
 </body>
 </html>
