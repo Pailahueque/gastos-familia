@@ -59,7 +59,6 @@
                 </button>
             </div>
             
-            <!-- Guía de Configuración Rápida de Firebase Rules -->
             <div id="helpGuide" class="hidden mt-4 pt-4 border-t border-amber-100 text-amber-900 leading-relaxed text-xs">
                 <div class="flex items-center gap-2 font-bold mb-2 text-amber-800">
                     <i class="fa-solid fa-circle-exclamation text-base"></i>
@@ -81,6 +80,32 @@ service cloud.firestore {
 }</pre>
                     <li>Haz clic en el botón azul de <strong>Publicar</strong>. ¡La app se sincronizará automáticamente!</li>
                 </ol>
+            </div>
+        </div>
+
+        <!-- Selector de Mes / Filtro -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-5 flex items-center justify-between gap-3">
+            <label for="monthFilter" class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 shrink-0">
+                <i class="fa-solid fa-calendar-days text-brand-500 text-sm"></i> Período:
+            </label>
+            <select id="monthFilter" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <!-- Se poblará dinámicamente -->
+            </select>
+        </div>
+
+        <!-- Tarjeta de Estadísticas del Mes -->
+        <div class="grid grid-cols-3 gap-3 mb-5">
+            <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Gasto Total</p>
+                <span id="statTotalGasto" class="text-base font-extrabold text-slate-800">$0</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Prom. x Gasto</p>
+                <span id="statPromedioGasto" class="text-base font-extrabold text-slate-800">$0</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Top Categoría</p>
+                <span id="statTopCat" class="text-xs font-extrabold text-slate-800 truncate block">-</span>
             </div>
         </div>
 
@@ -198,9 +223,14 @@ service cloud.firestore {
                         <input type="number" id="amount" min="1" step="any" placeholder="Monto total" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label for="concept" class="text-xs font-bold text-slate-500 uppercase">Concepto</label>
-                        <input type="text" id="concept" placeholder="¿En qué se gastó?" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                        <label for="expenseDate" class="text-xs font-bold text-slate-500 uppercase">Fecha</label>
+                        <input type="date" id="expenseDate" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
                     </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label for="concept" class="text-xs font-bold text-slate-500 uppercase">Concepto</label>
+                    <input type="text" id="concept" placeholder="¿En qué se gastó?" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
                 </div>
 
                 <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-brand-500/20 active:translate-y-[1px] transition-all duration-150">
@@ -227,14 +257,14 @@ service cloud.firestore {
         DESARROLLADO PARA EL HOGAR 🏡 2026
     </footer>
 
-    <!-- LOGICA DE LA APP E INTEGRACIÓN CON TU FIREBASE -->
+    <!-- LOGICA DE LA APP E INTEGRACIÓN CON FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { 
             getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, writeBatch 
         } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
-        // Configuración de Firebase oficial del usuario
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAKStT0NSWpJ9aVdr201PvPf-6T1kq2OQo",
             authDomain: "splitwise-familiar.firebaseapp.com",
@@ -253,20 +283,28 @@ service cloud.firestore {
         };
 
         let localExpenses = [];
+        let filteredExpenses = [];
         let isLocalStorageMode = false;
         let db;
         let expensesCollection;
         let firebaseUnsubscribe = null;
+        let selectedMonthKey = 'all';
 
-        // Elementos DOM del Banner de Conexión
+        // Elementos DOM
         const banner = document.getElementById('connectionBanner');
         const pingDotBg = document.getElementById('pingDotBg');
         const pingDot = document.getElementById('pingDot');
         const connText = document.getElementById('connectionText');
         const helpBtn = document.getElementById('helpBtn');
         const helpGuide = document.getElementById('helpGuide');
+        const monthFilterSelect = document.getElementById('monthFilter');
+        const expenseDateInput = document.getElementById('expenseDate');
 
-        // Manejar el despliegue de ayuda para configurar reglas
+        // Establecer fecha de hoy en el selector
+        const today = new Date().toISOString().split('T')[0];
+        expenseDateInput.value = today;
+
+        // Despliegue de ayuda
         helpBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (helpGuide.classList.contains('hidden')) {
@@ -278,64 +316,53 @@ service cloud.firestore {
             }
         });
 
-        // Activar modo almacenamiento local provisional
-        function switchToLocalStorage(reasonMessage) {
+        // Cambio de mes en el filtro
+        monthFilterSelect.addEventListener('change', (e) => {
+            selectedMonthKey = e.target.value;
+            renderApp();
+        });
+
+        function switchToLocalStorage() {
             if (isLocalStorageMode) return;
             isLocalStorageMode = true;
 
-            if (firebaseUnsubscribe) {
-                firebaseUnsubscribe(); // cancelar oyente para evitar bloqueos
-            }
+            if (firebaseUnsubscribe) firebaseUnsubscribe();
 
-            // Actualizar diseño del Banner a Estado Local
             banner.className = "mb-5 p-4 rounded-xl text-xs border transition-all duration-300 shadow-sm bg-amber-50 text-amber-800 border-amber-200";
             pingDotBg.className = "absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping";
             pingDot.className = "relative inline-flex rounded-full h-3 w-3 bg-amber-500";
-            connText.innerHTML = `<strong>Modo Local Activo 💾</strong> - Tus datos se guardarán localmente en este dispositivo. No sincronizará online.`;
+            connText.innerHTML = `<strong>Modo Local Activo 💾</strong> - Tus datos se guardarán localmente.`;
             helpBtn.classList.remove('hidden');
 
             loadLocalStorageExpenses();
             renderApp();
         }
 
-        // Cargar datos locales de LocalStorage
         function loadLocalStorageExpenses() {
             const stored = localStorage.getItem('local_splitwise_gastos');
-            if (stored) {
-                try {
-                    localExpenses = JSON.parse(stored);
-                } catch (e) {
-                    localExpenses = [];
-                }
-            } else {
-                localExpenses = [];
-            }
+            localExpenses = stored ? JSON.parse(stored) : [];
         }
 
-        // Guardar datos locales en LocalStorage
         function saveLocalStorageExpenses() {
             localStorage.setItem('local_splitwise_gastos', JSON.stringify(localExpenses));
         }
 
-        // Inicialización segura de Firebase y fallback LocalStorage si se demora o falla
+        // Inicialización de Firebase
         try {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             expensesCollection = collection(db, "gastos");
 
-            // Temporizador de conexión: si tarda más de 3 segundos, asume problema de conexión/permisos y entra en local
             const connectionTimeout = setTimeout(() => {
                 if (!isLocalStorageMode && localExpenses.length === 0) {
                     switchToLocalStorage();
                 }
             }, 3000);
 
-            // Monitoreo en tiempo real de Firebase
             firebaseUnsubscribe = onSnapshot(expensesCollection, (snapshot) => {
                 clearTimeout(connectionTimeout);
                 isLocalStorageMode = false;
                 
-                // Actualizar diseño del Banner a Online exitoso
                 banner.className = "mb-5 p-4 rounded-xl text-xs border transition-all duration-300 shadow-sm bg-emerald-50 text-emerald-800 border-emerald-200";
                 pingDotBg.className = "absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping";
                 pingDot.className = "relative inline-flex rounded-full h-3 w-3 bg-emerald-500";
@@ -348,31 +375,105 @@ service cloud.firestore {
                     localExpenses.push({ id: doc.id, ...doc.data() });
                 });
                 
-                localExpenses.sort((a, b) => b.createdAt - a.createdAt);
+                localExpenses.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                updateMonthDropdown();
                 renderApp();
             }, (error) => {
                 clearTimeout(connectionTimeout);
-                console.warn("Firestore bloqueado por reglas de seguridad:", error);
+                console.warn("Firestore error:", error);
                 switchToLocalStorage();
             });
 
         } catch (e) {
-            console.error("Error al inicializar Firebase SDK:", e);
+            console.error("Error al inicializar Firebase:", e);
             switchToLocalStorage();
         }
 
+        // Generar las opciones del selector de mes
+        function updateMonthDropdown() {
+            const months = new Set();
+            localExpenses.forEach(exp => {
+                const dateObj = exp.date ? new Date(exp.date + "T00:00:00") : new Date(exp.createdAt);
+                if (!isNaN(dateObj)) {
+                    const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                    months.add(key);
+                }
+            });
+
+            const sortedMonths = Array.from(months).sort().reverse();
+            const currentVal = selectedMonthKey;
+
+            monthFilterSelect.innerHTML = `<option value="all">Todos los Meses</option>`;
+
+            const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+            sortedMonths.forEach(m => {
+                const [year, monthNum] = m.split('-');
+                const monthName = monthsNames[parseInt(monthNum) - 1];
+                const option = document.createElement('option');
+                option.value = m;
+                option.textContent = `${monthName} ${year}`;
+                monthFilterSelect.appendChild(option);
+            });
+
+            monthFilterSelect.value = currentVal;
+        }
+
+        // Obtener los gastos filtrados según el mes seleccionado
+        function getFilteredExpenses() {
+            if (selectedMonthKey === 'all') return localExpenses;
+
+            return localExpenses.filter(exp => {
+                const dateObj = exp.date ? new Date(exp.date + "T00:00:00") : new Date(exp.createdAt);
+                if (isNaN(dateObj)) return false;
+                const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                return key === selectedMonthKey;
+            });
+        }
+
         function renderApp() {
+            filteredExpenses = getFilteredExpenses();
             calculateTotalsAndBalances();
             updateCategoryChart();
+            updateStatistics();
             renderExpenseList();
         }
 
-        // Calcula totales individuales y quién le debe a quién
+        // Estadísticas rápidas
+        function updateStatistics() {
+            let total = 0;
+            const catTotals = {};
+
+            filteredExpenses.forEach(exp => {
+                const amount = parseFloat(exp.amount) || 0;
+                total += amount;
+                catTotals[exp.category] = (catTotals[exp.category] || 0) + amount;
+            });
+
+            const count = filteredExpenses.length;
+            const avg = count > 0 ? total / count : 0;
+
+            let topCatKey = '-';
+            let maxCatVal = 0;
+
+            for (const [cat, val] of Object.entries(catTotals)) {
+                if (val > maxCatVal) {
+                    maxCatVal = val;
+                    topCatKey = cat;
+                }
+            }
+
+            document.getElementById('statTotalGasto').textContent = formatCurrency(total);
+            document.getElementById('statPromedioGasto').textContent = formatCurrency(avg);
+            document.getElementById('statTopCat').textContent = categoryConfig[topCatKey]?.label || '-';
+        }
+
+        // Calcula saldos de la selección activa
         function calculateTotalsAndBalances() {
             let spentCamila = 0;
             let spentNicolas = 0;
 
-            localExpenses.forEach(exp => {
+            filteredExpenses.forEach(exp => {
                 const val = parseFloat(exp.amount) || 0;
                 if (exp.payer === 'Camila') spentCamila += val;
                 else if (exp.payer === 'Nicolás') spentNicolas += val;
@@ -396,12 +497,12 @@ service cloud.firestore {
             }
         }
 
-        // Actualiza el porcentaje y el ancho de las barras de categoría
+        // Actualiza el porcentaje y el ancho de las barras
         function updateCategoryChart() {
             const totals = { comida: 0, fijos: 0, dividendos: 0, hipotecario: 0, otros: 0 };
             let grandTotal = 0;
 
-            localExpenses.forEach(exp => {
+            filteredExpenses.forEach(exp => {
                 const val = parseFloat(exp.amount) || 0;
                 if (totals[exp.category] !== undefined) {
                     totals[exp.category] += val;
@@ -417,28 +518,30 @@ service cloud.firestore {
             }
         }
 
-        // Renderiza el feed de gastos
+        // Renderiza lista
         function renderExpenseList() {
             const expenseList = document.getElementById('expenseList');
             expenseList.innerHTML = '';
             
-            if (localExpenses.length === 0) {
-                expenseList.innerHTML = `<li class="text-center py-6 text-slate-400 font-medium text-xs">No hay gastos registrados todavía.</li>`;
+            if (filteredExpenses.length === 0) {
+                expenseList.innerHTML = `<li class="text-center py-6 text-slate-400 font-medium text-xs">No hay gastos registrados en este período.</li>`;
                 return;
             }
 
-            localExpenses.forEach((exp) => {
+            filteredExpenses.forEach((exp) => {
                 const config = categoryConfig[exp.category] || categoryConfig.otros;
+                const displayDate = exp.date ? exp.date.split('-').reverse().slice(0, 2).join('/') : '';
+                
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center py-3 group hover:bg-slate-50 rounded-lg px-2 transition-all duration-150';
                 li.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs ${config.color} shadow-sm">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs ${config.color} shadow-sm shrink-0">
                             <i class="fa-solid ${config.icon}"></i>
                         </div>
                         <div class="flex flex-col">
                             <span class="text-sm font-semibold text-slate-800 leading-tight">${exp.concept}</span>
-                            <span class="text-[10px] text-slate-400 font-medium mt-0.5">Pagado por ${exp.payer}</span>
+                            <span class="text-[10px] text-slate-400 font-medium mt-0.5">Pagado por ${exp.payer} ${displayDate ? '• ' + displayDate : ''}</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -451,7 +554,6 @@ service cloud.firestore {
                 expenseList.appendChild(li);
             });
 
-            // Registrar listeners para los botones de eliminación individuales
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
@@ -459,12 +561,13 @@ service cloud.firestore {
                         if (isLocalStorageMode) {
                             localExpenses = localExpenses.filter(exp => exp.id !== id);
                             saveLocalStorageExpenses();
+                            updateMonthDropdown();
                             renderApp();
                         } else {
                             try {
                                 await deleteDoc(doc(db, "gastos", id));
                             } catch (err) {
-                                console.error("Error al borrar en Firebase, forzando modo local:", err);
+                                console.error("Error al borrar en Firebase:", err);
                                 switchToLocalStorage();
                             }
                         }
@@ -473,16 +576,17 @@ service cloud.firestore {
             });
         }
 
-        // Procesar formulario de nuevo gasto
+        // Formulario
         document.getElementById('expenseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payer = document.getElementById('payer').value;
             const category = document.getElementById('category').value;
             const amount = parseFloat(document.getElementById('amount').value);
             const concept = document.getElementById('concept').value;
+            const date = document.getElementById('expenseDate').value;
 
             const newExpense = {
-                payer, category, amount, concept,
+                payer, category, amount, concept, date,
                 createdAt: Date.now()
             };
 
@@ -490,17 +594,18 @@ service cloud.firestore {
                 newExpense.id = 'local_' + Date.now();
                 localExpenses.unshift(newExpense);
                 saveLocalStorageExpenses();
+                updateMonthDropdown();
                 renderApp();
             } else {
                 try {
                     await addDoc(expensesCollection, newExpense);
                 } catch (err) {
-                    console.error("Fallo de guardado en Firebase, guardando en local storage:", err);
+                    console.error("Error guardando en Firebase:", err);
                     switchToLocalStorage();
-                    // Ejecutar guardado local de respaldo
                     newExpense.id = 'local_' + Date.now();
                     localExpenses.unshift(newExpense);
                     saveLocalStorageExpenses();
+                    updateMonthDropdown();
                     renderApp();
                 }
             }
@@ -509,12 +614,13 @@ service cloud.firestore {
             document.getElementById('concept').value = '';
         });
 
-        // Limpiar base de datos completa
+        // Limpieza total
         document.getElementById('clearBtn').addEventListener('click', async () => {
             if(confirm('¿Eliminar definitivamente todos los gastos del historial? Esto reiniciará las cuentas.')) {
                 if (isLocalStorageMode) {
                     localExpenses = [];
                     localStorage.removeItem('local_splitwise_gastos');
+                    updateMonthDropdown();
                     renderApp();
                 } else {
                     try {
