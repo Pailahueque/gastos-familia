@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para el gráfico interactivo -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -80,6 +82,14 @@ service cloud.firestore {
 }</pre>
                     <li>Haz clic en el botón azul de <strong>Publicar</strong>. ¡La app se sincronizará automáticamente!</li>
                 </ol>
+            </div>
+        </div>
+
+        <!-- Gráfico Mensual (Nuevo) -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-5">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Proyección de Gastos</h2>
+            <div class="relative h-48 w-full">
+                <canvas id="monthlyChart"></canvas>
             </div>
         </div>
 
@@ -217,10 +227,14 @@ service cloud.firestore {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-3">
                     <div class="flex flex-col gap-1.5">
-                        <label for="amount" class="text-xs font-bold text-slate-500 uppercase">Monto ($)</label>
-                        <input type="number" id="amount" min="1" step="any" placeholder="Monto total" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                        <label for="amount" class="text-xs font-bold text-slate-500 uppercase">Total ($)</label>
+                        <input type="number" id="amount" min="1" step="any" placeholder="Total" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label for="cuotas" class="text-xs font-bold text-slate-500 uppercase">Cuotas</label>
+                        <input type="number" id="cuotas" min="1" max="48" value="1" placeholder="Ej: 3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all" required>
                     </div>
                     <div class="flex flex-col gap-1.5">
                         <label for="expenseDate" class="text-xs font-bold text-slate-500 uppercase">Fecha</label>
@@ -234,7 +248,7 @@ service cloud.firestore {
                 </div>
 
                 <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-brand-500/20 active:translate-y-[1px] transition-all duration-150">
-                    <i class="fa-solid fa-divide mr-2"></i>Dividir 50 / 50
+                    <i class="fa-solid fa-divide mr-2"></i>Dividir Gasto / Cuotas
                 </button>
             </form>
         </div>
@@ -289,6 +303,7 @@ service cloud.firestore {
         let expensesCollection;
         let firebaseUnsubscribe = null;
         let selectedMonthKey = 'all';
+        let chartInstance = null; // Instancia del gráfico
 
         // Elementos DOM
         const banner = document.getElementById('connectionBanner');
@@ -299,6 +314,11 @@ service cloud.firestore {
         const helpGuide = document.getElementById('helpGuide');
         const monthFilterSelect = document.getElementById('monthFilter');
         const expenseDateInput = document.getElementById('expenseDate');
+
+        // Función de moneda utilitaria
+        function formatCurrency(value) {
+            return '$' + Math.round(value).toLocaleString('es-CL');
+        }
 
         // Establecer fecha de hoy en el selector
         const today = new Date().toISOString().split('T')[0];
@@ -335,6 +355,7 @@ service cloud.firestore {
             helpBtn.classList.remove('hidden');
 
             loadLocalStorageExpenses();
+            updateMonthDropdown();
             renderApp();
         }
 
@@ -393,7 +414,7 @@ service cloud.firestore {
         function updateMonthDropdown() {
             const months = new Set();
             localExpenses.forEach(exp => {
-                const dateObj = exp.date ? new Date(exp.date + "T00:00:00") : new Date(exp.createdAt);
+                const dateObj = exp.date ? new Date(exp.date + "T12:00:00") : new Date(exp.createdAt);
                 if (!isNaN(dateObj)) {
                     const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
                     months.add(key);
@@ -404,7 +425,6 @@ service cloud.firestore {
             const currentVal = selectedMonthKey;
 
             monthFilterSelect.innerHTML = `<option value="all">Todos los Meses</option>`;
-
             const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
             sortedMonths.forEach(m => {
@@ -416,15 +436,20 @@ service cloud.firestore {
                 monthFilterSelect.appendChild(option);
             });
 
-            monthFilterSelect.value = currentVal;
+            // Conservar selección si existe, si no, seleccionar "all"
+            if (sortedMonths.includes(currentVal) || currentVal === 'all') {
+                monthFilterSelect.value = currentVal;
+            } else {
+                monthFilterSelect.value = sortedMonths.length > 0 ? sortedMonths[0] : 'all';
+                selectedMonthKey = monthFilterSelect.value;
+            }
         }
 
-        // Obtener los gastos filtrados según el mes seleccionado
         function getFilteredExpenses() {
             if (selectedMonthKey === 'all') return localExpenses;
 
             return localExpenses.filter(exp => {
-                const dateObj = exp.date ? new Date(exp.date + "T00:00:00") : new Date(exp.createdAt);
+                const dateObj = exp.date ? new Date(exp.date + "T12:00:00") : new Date(exp.createdAt);
                 if (isNaN(dateObj)) return false;
                 const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
                 return key === selectedMonthKey;
@@ -437,6 +462,79 @@ service cloud.firestore {
             updateCategoryChart();
             updateStatistics();
             renderExpenseList();
+            renderMonthlyChart(); // Actualiza el gráfico visual
+        }
+
+        // ==========================================
+        // NUEVA FUNCIÓN: Gráfico Mensual Interactívo
+        // ==========================================
+        function renderMonthlyChart() {
+            const ctx = document.getElementById('monthlyChart');
+            if (!ctx) return;
+
+            // Agrupar TODOS los gastos (no solo los filtrados) por mes
+            const monthlyData = {};
+            localExpenses.forEach(exp => {
+                const dateObj = exp.date ? new Date(exp.date + "T12:00:00") : new Date(exp.createdAt);
+                if (isNaN(dateObj)) return;
+                const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                monthlyData[key] = (monthlyData[key] || 0) + parseFloat(exp.amount);
+            });
+
+            // Ordenar los meses cronológicamente
+            const sortedKeys = Object.keys(monthlyData).sort();
+            const monthsNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+            
+            const labels = sortedKeys.map(k => {
+                const [y, m] = k.split('-');
+                return `${monthsNames[parseInt(m)-1]} ${y.substring(2)}`; // Ej: "Feb 26"
+            });
+            const data = sortedKeys.map(k => monthlyData[k]);
+
+            // Crear o actualizar el gráfico
+            if (chartInstance) {
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets[0].data = data;
+                chartInstance.update();
+            } else {
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Gastos Proyectados',
+                            data: data,
+                            backgroundColor: '#1cc88a', // brand-500
+                            borderRadius: 6,
+                            barPercentage: 0.6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatCurrency(context.raw || 0);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString('es-CL');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         // Estadísticas rápidas
@@ -468,7 +566,7 @@ service cloud.firestore {
             document.getElementById('statTopCat').textContent = categoryConfig[topCatKey]?.label || '-';
         }
 
-        // Calcula saldos de la selección activa
+        // Calcula saldos
         function calculateTotalsAndBalances() {
             let spentCamila = 0;
             let spentNicolas = 0;
@@ -497,7 +595,6 @@ service cloud.firestore {
             }
         }
 
-        // Actualiza el porcentaje y el ancho de las barras
         function updateCategoryChart() {
             const totals = { comida: 0, fijos: 0, dividendos: 0, hipotecario: 0, otros: 0 };
             let grandTotal = 0;
@@ -576,71 +673,102 @@ service cloud.firestore {
             });
         }
 
-        // Formulario
+        // ==========================================
+        // LOGICA MODIFICADA: Envio de Form y Cuotas
+        // ==========================================
         document.getElementById('expenseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payer = document.getElementById('payer').value;
             const category = document.getElementById('category').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const concept = document.getElementById('concept').value;
-            const date = document.getElementById('expenseDate').value;
+            const totalAmount = parseFloat(document.getElementById('amount').value);
+            const baseConcept = document.getElementById('concept').value;
+            const baseDate = document.getElementById('expenseDate').value;
+            const cuotas = parseInt(document.getElementById('cuotas').value) || 1;
 
-            const newExpense = {
-                payer, category, amount, concept, date,
-                createdAt: Date.now()
-            };
+            const amountPerCuota = totalAmount / cuotas;
+            const newExpenses = [];
+
+            // Bucle para generar registros según el número de cuotas
+            for (let i = 0; i < cuotas; i++) {
+                // Instanciar fecha a las 12:00 para evitar desajustes de zona horaria
+                const dateObj = new Date(baseDate + "T12:00:00");
+                dateObj.setMonth(dateObj.getMonth() + i); // Sumar 'i' meses a la fecha original
+                
+                const cuotaDate = dateObj.toISOString().split('T')[0];
+                const finalConcept = cuotas > 1 ? `${baseConcept} (Cuota ${i+1}/${cuotas})` : baseConcept;
+
+                newExpenses.push({
+                    payer, 
+                    category, 
+                    amount: amountPerCuota, 
+                    concept: finalConcept, 
+                    date: cuotaDate,
+                    createdAt: Date.now() + i // +i para mantener orden de inserción
+                });
+            }
 
             if (isLocalStorageMode) {
-                newExpense.id = 'local_' + Date.now();
-                localExpenses.unshift(newExpense);
+                newExpenses.forEach((exp, index) => {
+                    exp.id = 'local_' + Date.now() + '_' + index;
+                    localExpenses.unshift(exp);
+                });
                 saveLocalStorageExpenses();
                 updateMonthDropdown();
                 renderApp();
             } else {
                 try {
-                    await addDoc(expensesCollection, newExpense);
+                    // writeBatch nos permite enviar múltiples documentos de una vez a Firebase
+                    const batch = writeBatch(db);
+                    newExpenses.forEach(exp => {
+                        const newDocRef = doc(expensesCollection); // Autogenera ID
+                        batch.set(newDocRef, exp);
+                    });
+                    await batch.commit();
                 } catch (err) {
                     console.error("Error guardando en Firebase:", err);
                     switchToLocalStorage();
-                    newExpense.id = 'local_' + Date.now();
-                    localExpenses.unshift(newExpense);
+                    
+                    // Fallback local en caso de error
+                    newExpenses.forEach((exp, index) => {
+                        exp.id = 'local_' + Date.now() + '_' + index;
+                        localExpenses.unshift(exp);
+                    });
                     saveLocalStorageExpenses();
                     updateMonthDropdown();
                     renderApp();
                 }
             }
-
-            document.getElementById('amount').value = '';
-            document.getElementById('concept').value = '';
+            
+            // Resetear el formulario
+            e.target.reset();
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('cuotas').value = 1;
         });
 
-        // Limpieza total
+        // Botón limpiar historial completo
         document.getElementById('clearBtn').addEventListener('click', async () => {
-            if(confirm('¿Eliminar definitivamente todos los gastos del historial? Esto reiniciará las cuentas.')) {
-                if (isLocalStorageMode) {
+            if(confirm('¿ESTÁS SEGURO? Esta acción borrará TODO el historial y es irreversible.')) {
+                if(isLocalStorageMode) {
                     localExpenses = [];
-                    localStorage.removeItem('local_splitwise_gastos');
+                    saveLocalStorageExpenses();
                     updateMonthDropdown();
                     renderApp();
                 } else {
                     try {
-                        const querySnapshot = await getDocs(expensesCollection);
+                        const snapshot = await getDocs(expensesCollection);
                         const batch = writeBatch(db);
-                        querySnapshot.forEach((doc) => {
-                            batch.delete(doc.ref);
+                        snapshot.docs.forEach((d) => {
+                            batch.delete(d.ref);
                         });
                         await batch.commit();
-                    } catch (err) {
-                        console.error("Error al limpiar base de datos remota:", err);
+                    } catch(err) {
+                        console.error("Error al limpiar Firebase", err);
                         switchToLocalStorage();
                     }
                 }
             }
         });
 
-        function formatCurrency(value) {
-            return '$' + Math.round(value).toLocaleString('es-CL');
-        }
     </script>
 </body>
 </html>
